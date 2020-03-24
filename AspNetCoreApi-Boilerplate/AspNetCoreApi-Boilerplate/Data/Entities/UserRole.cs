@@ -14,6 +14,15 @@ namespace AspNetCoreApi_Boilerplate.Data.Entities
     {
         public void Configure(EntityTypeBuilder<UserRole> builder)
         {
+            builder.HasKey(x => new { x.UserId, x.RoleId });
+
+            builder.HasOne(x => x.User)
+                .WithMany(x => x.Roles)
+                .HasForeignKey(x => x.UserId);
+
+            builder.HasOne(x => x.Role)
+                .WithMany(x => x.Users)
+                .HasForeignKey(x => x.RoleId);
         }
     }
 }
