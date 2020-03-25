@@ -1,15 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using AspNetCoreApi_Boilerplate.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AspNetCoreApi_Boilerplate.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController : ControllerBase
@@ -26,8 +28,8 @@ namespace AspNetCoreApi_Boilerplate.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("[controller]/authenticate")]
-        public async Task<IActionResult> Authenticate(AuthenticateUserRequest request)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(AuthenticateUserRequest request)
         {
             var user = await _userManager.FindByNameAsync(request.Username);
             if (user == null)
@@ -47,14 +49,46 @@ namespace AspNetCoreApi_Boilerplate.Controllers
             await _signInManager.SignInAsync(user, false, "Password");
             return Ok(new UserDto
             {
-                Username = user.UserName
+                Username = user.UserName,
+                Token = GenerateJwtToken(user.Id.ToString())
             });
+        }
+
+        [HttpPost("test")]
+        public async Task<IActionResult> test()
+        {
+            return Ok(new UserDto
+            {
+                Username = "test"
+            });
+        }
+
+        public static string GenerateJwtToken(string entityId)
+        {
+            var key = Encoding.ASCII.GetBytes("secretthisisandimtestingbecauseithinkitneedstobeprettylong");
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Sid, entityId)
+                }),
+
+                Expires = DateTime.UtcNow.AddMinutes(5),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
     }
 
     internal class UserDto
     {
         public string Username { get; set; }
+        public string Token { get; set; }
     }
 
     public class AuthenticateUserRequest
