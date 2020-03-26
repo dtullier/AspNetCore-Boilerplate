@@ -46,7 +46,7 @@ namespace AspNetCoreApi_Boilerplate.Controllers
             {
                 return BadRequest();
             }
-            await _signInManager.SignInAsync(user, false, "Password");
+
             return Ok(new UserDto
             {
                 Username = user.UserName,
@@ -54,6 +54,7 @@ namespace AspNetCoreApi_Boilerplate.Controllers
             });
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("test")]
         public async Task<IActionResult> test()
         {
@@ -71,10 +72,11 @@ namespace AspNetCoreApi_Boilerplate.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.Sid, entityId)
+                    new Claim(ClaimTypes.Sid, entityId),
+                    new Claim(ClaimTypes.Role, "Admin")
                 }),
 
-                Expires = DateTime.UtcNow.AddMinutes(5),
+                Expires = DateTime.UtcNow.AddMinutes(30),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
