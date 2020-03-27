@@ -1,5 +1,6 @@
 using AspNetCoreApi_Boilerplate.Data;
 using AspNetCoreApi_Boilerplate.Data.Entities;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,6 +31,8 @@ namespace AspNetCoreApi_Boilerplate
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddAutoMapper(typeof(Startup));
+
 
             services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(Configuration["ConnectionString:DefaultConnection"]));
