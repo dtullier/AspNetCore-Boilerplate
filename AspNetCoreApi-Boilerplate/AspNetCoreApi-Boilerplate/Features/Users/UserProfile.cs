@@ -1,7 +1,6 @@
 ﻿using AspNetCoreApi_Boilerplate.Controllers;
 using AspNetCoreApi_Boilerplate.Data.Entities;
 using AutoMapper;
-using System.Linq;
 
 namespace AspNetCoreApi_Boilerplate.Features.Users
 {
