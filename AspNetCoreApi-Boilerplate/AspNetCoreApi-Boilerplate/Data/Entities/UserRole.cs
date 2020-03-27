@@ -1,21 +1,23 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AspNetCoreApi_Boilerplate.Data.Entities
 {
-    public class UserRole : IdentityUserRole<int>
+    public class UserRole
     {
-        public virtual User User { get; set; }
-        public virtual Role Role { get; set; }
+        public int Id { get; set; }
+
+        public int UserId { get; set; }
+        public User User { get; set; }
+
+        public int RoleId { get; set; }
+        public Role Role { get; set; }
     }
 
     public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
     {
         public void Configure(EntityTypeBuilder<UserRole> builder)
         {
-            builder.HasKey(x => new { x.UserId, x.RoleId });
-
             builder.HasOne(x => x.User)
                 .WithMany(x => x.Roles)
                 .HasForeignKey(x => x.UserId);

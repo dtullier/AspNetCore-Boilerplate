@@ -1,6 +1,5 @@
 ﻿using AspNetCoreApi_Boilerplate.Data.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using AspNetCoreApi_Boilerplate.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -8,7 +7,7 @@ using System.Reflection;
 
 namespace AspNetCoreApi_Boilerplate.Data
 {
-    public class DataContext : IdentityDbContext<User, Role, int, IdentityUserClaim<int>, UserRole, IdentityUserLogin<int>, IdentityRoleClaim<int>, IdentityUserToken<int>>
+    public class DataContext : DbContext
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
@@ -17,6 +16,7 @@ namespace AspNetCoreApi_Boilerplate.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             ApplyConfigurations(builder);
+            SeedData(builder);
         }
 
         public virtual void ApplyConfigurations(ModelBuilder builder)
@@ -47,6 +47,34 @@ namespace AspNetCoreApi_Boilerplate.Data
                     }
                 }
             }
+        }
+
+        public void SeedData(ModelBuilder builder)
+        {
+            var adminPasswordHasher = new PasswordHash("P@ssword123");
+
+            builder.Entity<User>().HasData(new User
+            {
+                Id = 1,
+                FirstName = "Seeded",
+                LastName = "Admin",
+                Email = "admin@admin.com",
+                PasswordHash = adminPasswordHasher.Hash,
+                PasswordSalt = adminPasswordHasher.Salt
+            });
+
+            builder.Entity<Role>().HasData(new Role
+            {
+                Id = 1,
+                Name = "Admin"
+            });
+
+            builder.Entity<UserRole>().HasData(new UserRole
+            {
+                Id = 1,
+                UserId = 1,
+                RoleId = 1
+            });
         }
 
     }

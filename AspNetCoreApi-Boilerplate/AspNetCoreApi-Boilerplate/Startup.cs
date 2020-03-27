@@ -1,5 +1,5 @@
 using AspNetCoreApi_Boilerplate.Data;
-using AspNetCoreApi_Boilerplate.Data.Entities;
+using AspNetCoreApi_Boilerplate.Infrastructure;
 using AspNetCoreApi_Boilerplate.MediatR;
 using AspNetCoreApi_Boilerplate.MediatR.Behaviors;
 using AutoMapper;
@@ -8,11 +8,11 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -56,28 +56,30 @@ namespace AspNetCoreApi_Boilerplate
             services.AddScoped<IMediatorService, MediatorService>();
 
             SetupDatabase(services);
-            ConfigureIdentityWithJwt(services);
+            ConfigureJwtAuthentication(services);
             ConfigureSwagger(services);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
+            loggerFactory.AddSerilog();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+
+                app.UseSwagger();
+
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Boilerplate Api V1");
+                    c.RoutePrefix = string.Empty;
+                    c.DocExpansion(DocExpansion.None);
+                });
             }
 
             app.UseHttpsRedirection();
-
-            app.UseSwagger();
-
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                c.RoutePrefix = string.Empty;
-                c.DocExpansion(DocExpansion.None);
-            });
 
             app.UseRouting();
 
@@ -96,23 +98,13 @@ namespace AspNetCoreApi_Boilerplate
                 options.UseSqlServer(Configuration["ConnectionString:DefaultConnection"]));
         }
 
-        public void ConfigureIdentityWithJwt(IServiceCollection services)
+        public void ConfigureJwtAuthentication(IServiceCollection services)
         {
-            IdentityBuilder builder = services.AddIdentityCore<User>(opt =>
-                {
-                    opt.Password.RequireDigit = true;
-                    opt.Password.RequiredLength = 8;
-                    opt.Password.RequireNonAlphanumeric = true;
-                    opt.Password.RequireUppercase = true;
-                    opt.Password.RequireLowercase = true;
-                }
-            );
+            var appSettingsSection = Configuration.GetSection("AppSettings");
+            services.Configure<AppSettings>(appSettingsSection);
 
-            builder = new IdentityBuilder(builder.UserType, typeof(Role), builder.Services);
-            builder.AddEntityFrameworkStores<DataContext>();
-            builder.AddRoleValidator<RoleValidator<Role>>();
-            builder.AddRoleManager<RoleManager<Role>>();
-            builder.AddSignInManager<SignInManager<User>>();
+            var appSettings = appSettingsSection.Get<AppSettings>();
+            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
 
             services.AddAuthentication(options =>
             {
@@ -125,7 +117,7 @@ namespace AspNetCoreApi_Boilerplate
                         new TokenValidationParameters
                         {
                             ValidateIssuerSigningKey = true,
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("secretthisisandimtestingbecauseithinkitneedstobeprettylong")),
+                            IssuerSigningKey = new SymmetricSecurityKey(key),
                             ValidateIssuer = false,
                             ValidateAudience = false,
                             ClockSkew = TimeSpan.Zero
