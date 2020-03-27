@@ -1,13 +1,14 @@
-﻿using AspNetCoreApi_Boilerplate.Data;
+﻿using AspNetCoreApi_Boilerplate.Common.ErrorMessages;
+using AspNetCoreApi_Boilerplate.Data;
 using AspNetCoreApi_Boilerplate.Data.Entities;
 using AspNetCoreApi_Boilerplate.Dtos;
 using AspNetCoreApi_Boilerplate.Infrastructure;
 using AspNetCoreApi_Boilerplate.Infrastructure.Security;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ namespace AspNetCoreApi_Boilerplate.Features.Users
             CancellationToken cancellationToken)
         {
             var user = _context.Set<User>().First(x => x.Email == request.Email);
-            var roles = user.Roles.Select(x => x.Role.Name);
+            var roles = _context.Set<UserRole>().Where(x => x.UserId == user.Id).Select(x => x.Role.Name).ToList();
 
             var userToReturn = new GetUserAuthenticationDto
             {
@@ -85,11 +86,11 @@ namespace AspNetCoreApi_Boilerplate.Features.Users
                 .Must(ExistInDatabase)
                 .HideFromPreValidation()
                 .When(x => _emailPassed && _passwordPassed)
-                .WithMessage("incorrect")
+                .WithMessage(ErrorMessages.User.EmailOrPasswordIsIncorrect)
                 .Must(BeCorrectEmailAndPassword)
                 .HideFromPreValidation()
                 .When(x => _emailPassed && _passwordPassed)
-                .WithMessage("incorrect");
+                .WithMessage(ErrorMessages.User.EmailOrPasswordIsIncorrect);
         }
 
         private bool ExistInDatabase(AuthenticateUserRequest arg)

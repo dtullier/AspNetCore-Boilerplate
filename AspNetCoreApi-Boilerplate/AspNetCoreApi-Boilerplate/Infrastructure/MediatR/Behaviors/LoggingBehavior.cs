@@ -26,3 +26,16 @@ namespace AspNetCoreApi_Boilerplate.MediatR.Behaviors
         }
     }
 }
+
+//code for adding data to logs
+
+//var sb = new StringBuilder();
+//foreach(var prop in typeof(TRequest).GetProperties())
+//{
+//    sb.Append($"\t {prop.Name}: {request.GetType().GetProperty(prop.Name).GetValue(request)}\n");
+//}
+
+//_logger.Log(LogLevel.Information, $"Handling {typeof(TRequest).Name} \n {sb.ToString()}");
+//var response = await next();
+//_logger.Log(LogLevel.Information, $"Handled {typeof(TRequest).Name}");
+//return response;

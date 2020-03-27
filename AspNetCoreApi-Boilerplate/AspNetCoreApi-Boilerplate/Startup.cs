@@ -90,6 +90,8 @@ namespace AspNetCoreApi_Boilerplate
             {
                 endpoints.MapControllers();
             });
+
+            app.UseHttpsRedirection();
         }
 
         public void SetupDatabase(IServiceCollection services)

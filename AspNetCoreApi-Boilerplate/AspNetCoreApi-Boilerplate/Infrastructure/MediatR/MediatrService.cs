@@ -39,7 +39,7 @@ namespace AspNetCoreApi_Boilerplate.MediatR
 
             foreach (var error in result.Errors)
             {
-                var errorMessage = new ErrorMessage
+                var errorMessage = new ApiErrorMessage
                 {
                     Message = error.ErrorMessage,
                     Property = error.PropertyName

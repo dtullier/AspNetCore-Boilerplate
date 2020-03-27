@@ -6,7 +6,7 @@ namespace AspNetCoreApi_Boilerplate.Common.Responses
     public class Response
     {
         public bool IsValid => !ErrorMessages.Any();
-        public List<ErrorMessage> ErrorMessages { get; set; } = new List<ErrorMessage>();
+        public List<ApiErrorMessage> ErrorMessages { get; set; } = new List<ApiErrorMessage>();
     }
 
     public class Response<T> : Response
